@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weight Gain Diet Plan</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f4f0; }
+    ::-webkit-scrollbar { width: 0; }
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    @keyframes dots { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+    .dots { letter-spacing: 4px; animation: dots 1.4s infinite; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+const { useState, useEffect, createElement: h } = React;
+
+const T = {
+  en: {
+    appTitle: "Weight Gain Diet Plan", appSubtitle: "Target: Healthy Weight Gain",
+    today: "Today", weekly: "Weekly", monthly: "Monthly", aiCoach: "AI Coach",
+    settings: "Settings", progress: "Progress", completed: "Completed", pending: "Pending",
+    todayProgress: "Today's Progress", weeklyReport: "Weekly Report", monthlyReport: "Monthly Report",
+    shareProgress: "Share Progress", switchLang: "हिंदी", dailyHabits: "Daily Habits & Guidelines",
+    foodsToAvoid: "Foods to Avoid", hydration: "Hydration: 10 glasses of water throughout the day.",
+    consistency: "Stay consistent, be patient and trust the process.",
+    avoid1: "Namkeen (salty snacks) & biscuits.", avoid2: "Items made from refined flour (Maida).",
+    avoid3: "Outside fried or junk food.", avoid4: "Cold drinks and packaged juices.",
+    askAI: "Ask AI Coach...", aiSend: "Send", aiTyping: "AI Coach is thinking...",
+    completedTasks: "Tasks Completed", streakDays: "Day Streak", avgCompletion: "Avg Completion",
+    shareTitle: "My Weight Gain Progress", copyLink: "Copy Report", copied: "Copied!",
+    resetDay: "Reset Today", greeting: "Good", morning: "Morning", afternoon: "Afternoon",
+    evening: "Evening", night: "Night", rightNutrition: "RIGHT NUTRITION",
+    consistency2: "CONSISTENCY", betterResults: "BETTER RESULTS",
+    aiFeature1: "AI Meal Planner", aiFeature2: "Progress Analyzer", aiFeature3: "Motivation Coach",
+    generateMeal: "Generate Custom Meal", analyzeProgress: "Analyze My Progress", getMotivation: "Get Motivation",
+    noDataYet: "Complete tasks to see your progress!",
+    weekdays: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+    months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+  },
+  hi: {
+    appTitle: "वजन बढ़ाने का डाइट प्लान", appSubtitle: "लक्ष्य: हेल्दी वजन बढ़ाना",
+    today: "आज", weekly: "साप्ताहिक", monthly: "मासिक", aiCoach: "AI कोच",
+    settings: "सेटिंग्स", progress: "प्रगति", completed: "पूर्ण", pending: "बाकी",
+    todayProgress: "आज की प्रगति", weeklyReport: "साप्ताहिक रिपोर्ट", monthlyReport: "मासिक रिपोर्ट",
+    shareProgress: "प्रगति शेयर करें", switchLang: "English", dailyHabits: "दैनिक आदतें और सुझाव",
+    foodsToAvoid: "इन चीज़ों से बचें", hydration: "पानी: दिनभर में 10 गिलास पानी पिएं।",
+    consistency: "नियमित रहें, धैर्य रखें और प्रक्रिया पर भरोसा करें।",
+    avoid1: "नमकीन (चिप्स, नमकीन) और बिस्कुट।", avoid2: "मैदे (रिफाईड फ्लोर) से बनी चीजें।",
+    avoid3: "बाहर का तला-भुना या जंक फूड।", avoid4: "कोल्ड ड्रिंक्स और पैक्ड जूस।",
+    askAI: "AI कोच से पूछें...", aiSend: "भेजें", aiTyping: "AI कोच सोच रहे हैं...",
+    completedTasks: "पूर्ण कार्य", streakDays: "दिन की स्ट्रीक", avgCompletion: "औसत पूर्णता",
+    shareTitle: "मेरी वजन बढ़ाने की प्रगति", copyLink: "रिपोर्ट कॉपी करें", copied: "कॉपी हो गया!",
+    resetDay: "आज रीसेट करें", greeting: "शुभ", morning: "प्रभात", afternoon: "दोपहर",
+    evening: "संध्या", night: "रात्रि", rightNutrition: "सही पोषण",
+    consistency2: "नियमितता", betterResults: "बेहतर परिणाम",
+    aiFeature1: "AI मील प्लानर", aiFeature2: "प्रगति विश्लेषक", aiFeature3: "प्रेरणा कोच",
+    generateMeal: "कस्टम मील बनाएं", analyzeProgress: "मेरी प्रगति विश्लेषण करें", getMotivation: "प्रेरणा पाएं",
+    noDataYet: "प्रगति देखने के लिए कार्य पूर्ण करें!",
+    weekdays: ["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"],
+    months: ["जन","फर","मार","अप्र","मई","जून","जुल","अग","सित","अक्त","नव","दिस"],
+  },
+};
+
+const TASKS_DATA = {
+  en: [
+    { id:"t1", time:"6:00 AM", emoji:"💧", title:"Morning Hydration", desc:"1 glass of water (normal or lukewarm)", tag:"hydration", color:"#4FC3F7" },
+    { id:"t2", time:"6:30 AM", emoji:"🎧", title:"Morning Club Join", desc:"Online or a community wellness session", tag:"wellness", color:"#81C784" },
+    { id:"t3", time:"7:00 AM", emoji:"🌿", title:"Afresh", desc:"1 scoop – Metabolism Booster", tag:"supplement", color:"#A5D6A7" },
+    { id:"t4", time:"8:00 AM", emoji:"🥤", title:"Breakfast", desc:"Formula-1 (3 scoops) + ShakeMate (2 scoops)", tag:"meal", color:"#FFCC80" },
+    { id:"t5", time:"10:00 AM", emoji:"🍌", title:"Mid-Morning Snack", desc:"2 Bananas or Chiku (or any seasonal fruit like mango)", tag:"snack", color:"#FFE082" },
+    { id:"t6", time:"12:00 PM", emoji:"🍽️", title:"Lunch", desc:"4 Roti + Sabzi + Salad + Curd", tag:"meal", color:"#EF9A9A" },
+    { id:"t7", time:"1:00 PM", emoji:"🌿", title:"Afresh", desc:"1 scoop (Helps boost metabolism)", tag:"supplement", color:"#A5D6A7" },
+    { id:"t8", time:"4:00 PM", emoji:"☕", title:"Evening Snack", desc:"Tea + Healthy Snacks", tag:"snack", color:"#BCAAA4" },
+    { id:"t9", time:"5:00 PM", emoji:"🌱", title:"Evening Nutrition", desc:"Sprouts (Moong, Chana, and soaked dry fruits)", tag:"meal", color:"#80CBC4" },
+    { id:"t10", time:"8:00 PM", emoji:"🫓", title:"Dinner", desc:"3 Roti + Sabzi", tag:"meal", color:"#CE93D8" },
+    { id:"t11", time:"10:00 PM", emoji:"🌙", title:"Rest", desc:"Time to sleep – Good Sleep Better Growth", tag:"rest", color:"#9FA8DA" },
+  ],
+  hi: [
+    { id:"t1", time:"6:00 सुबह", emoji:"💧", title:"सुबह हाइड्रेशन", desc:"1 गिलास पानी पिएं (सामान्य या हल्का गरम)", tag:"hydration", color:"#4FC3F7" },
+    { id:"t2", time:"6:30 सुबह", emoji:"🎧", title:"मॉर्निंग क्लब जॉइन करें", desc:"ऑनलाइन या किसी समुदाय के साथ वेलनेस सेशन करें", tag:"wellness", color:"#81C784" },
+    { id:"t3", time:"7:00 सुबह", emoji:"🌿", title:"अफ्रेश", desc:"1 स्कूप – मेटाबॉलिज्म बढ़ाने में मददगार", tag:"supplement", color:"#A5D6A7" },
+    { id:"t4", time:"8:00 सुबह", emoji:"🥤", title:"नाश्ता", desc:"फॉर्मूला-1 (3 स्कूप) + शेकमेट (2 स्कूप)", tag:"meal", color:"#FFCC80" },
+    { id:"t5", time:"10:00 सुबह", emoji:"🍌", title:"मिड-मॉर्निंग स्नैक", desc:"2 केले या चीकू (या कोई मौसमी फल जैसे आम)", tag:"snack", color:"#FFE082" },
+    { id:"t6", time:"12:00 दोपहर", emoji:"🍽️", title:"दोपहर का भोजन", desc:"4 रोटी + सब्जी + सलाद + दही", tag:"meal", color:"#EF9A9A" },
+    { id:"t7", time:"1:00 दोपहर", emoji:"🌿", title:"अफ्रेश", desc:"1 स्कूप (मेटाबॉलिज्म बढ़ाने में मददगार)", tag:"supplement", color:"#A5D6A7" },
+    { id:"t8", time:"4:00 शाम", emoji:"☕", title:"शाम का स्नैक", desc:"चाय + हेल्दी स्नैक्स", tag:"snack", color:"#BCAAA4" },
+    { id:"t9", time:"5:00 शाम", emoji:"🌱", title:"शाम का पोषण", desc:"स्प्राउट्स (मूंग, चना) और भिगोए सूखे मेवे", tag:"meal", color:"#80CBC4" },
+    { id:"t10", time:"8:00 रात", emoji:"🫓", title:"रात का भोजन", desc:"3 रोटी + सब्जी", tag:"meal", color:"#CE93D8" },
+    { id:"t11", time:"10:00 रात", emoji:"🌙", title:"आराम", desc:"अच्छी नींद लें – अच्छी नींद, बेहतर विकास", tag:"rest", color:"#9FA8DA" },
+  ],
+};
+
+const STORAGE_KEY = "wgdp_data_v2";
+function loadData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : { completions:{}, lang:"en", streak:0, lastDate:null }; }
+  catch { return { completions:{}, lang:"en", streak:0, lastDate:null }; }
+}
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
+function getDateKey(date) { return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0"); }
+
+const S = {
+  root:{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:"#f0f4f0", position:"relative", overflowX:"hidden" },
+  header:{ background:"linear-gradient(135deg,#1B5E20 0%,#2E7D32 50%,#388E3C 100%)", position:"relative", overflow:"hidden" },
+  headerBg:{ position:"absolute", inset:0, background:"url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" },
+  headerContent:{ position:"relative", padding:"20px 20px 16px" },
+  headerTop:{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 },
+  greeting:{ color:"rgba(255,255,255,0.8)", fontSize:13 },
+  appTitle:{ color:"white", fontSize:20, fontWeight:800, lineHeight:1.2 },
+  langBtn:{ background:"rgba(255,255,255,0.2)", border:"1px solid rgba(255,255,255,0.4)", color:"white", padding:"6px 12px", borderRadius:20, fontSize:13, cursor:"pointer" },
+  progressRow:{ display:"flex", alignItems:"center", gap:16, marginBottom:12 },
+  statsCol:{ flex:1, display:"flex", flexDirection:"column", gap:6 },
+  statItem:{ display:"flex", alignItems:"center", gap:8 },
+  statNum:{ color:"white", fontWeight:700, fontSize:16 },
+  statLbl:{ color:"rgba(255,255,255,0.7)", fontSize:12 },
+  timeDisplay:{ color:"rgba(255,255,255,0.85)", fontSize:13, textAlign:"center", paddingTop:4, borderTop:"1px solid rgba(255,255,255,0.15)" },
+  tabBar:{ display:"flex", background:"white", borderBottom:"2px solid #e8f5e9", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 8px rgba(0,0,0,0.06)" },
+  tabBtn:{ flex:1, padding:"10px 4px", border:"none", background:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, color:"#888", borderBottom:"3px solid transparent", transition:"all 0.2s" },
+  tabActive:{ color:"#2E7D32", borderBottom:"3px solid #2E7D32", background:"#f1f8e9" },
+  tabLabel:{ fontSize:10, fontWeight:600 },
+  content:{ padding:"12px 14px 80px" },
+  sectionHeader:{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, fontWeight:700, color:"#1B5E20", fontSize:16 },
+  resetBtn:{ fontSize:11, color:"#EF5350", background:"#FFEBEE", border:"none", padding:"4px 10px", borderRadius:12, cursor:"pointer" },
+  taskCard:{ display:"flex", alignItems:"center", background:"white", borderRadius:14, marginBottom:10, padding:"12px 14px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)", cursor:"pointer", transition:"all 0.2s", position:"relative", overflow:"hidden", border:"1px solid #f0f0f0" },
+  taskDone:{ background:"#F1F8E9", border:"1px solid #C8E6C9" },
+  taskCelebrate:{ transform:"scale(1.02)", boxShadow:"0 4px 20px rgba(46,125,50,0.3)" },
+  taskAccent:{ position:"absolute", left:0, top:0, bottom:0, width:4, borderRadius:"14px 0 0 14px" },
+  taskTime:{ fontSize:10, color:"#888", minWidth:56, marginRight:6, marginLeft:8 },
+  taskEmoji:{ fontSize:24, marginRight:10 },
+  taskInfo:{ flex:1 },
+  taskTitle:{ fontWeight:700, fontSize:14, color:"#222" },
+  taskDesc:{ fontSize:12, color:"#666", marginTop:2 },
+  taskTag:{ display:"inline-block", fontSize:10, padding:"2px 8px", borderRadius:10, marginTop:4, fontWeight:600 },
+  taskCheck:{ width:26, height:26, borderRadius:"50%", border:"2px solid #ddd", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"white", background:"#eee", transition:"all 0.2s", flexShrink:0 },
+  taskCheckDone:{ background:"#2E7D32", border:"2px solid #2E7D32" },
+  habitsCard:{ background:"linear-gradient(135deg,#E3F2FD,#E8F5E9)", borderRadius:14, padding:16, marginTop:12, border:"1px solid #BBDEFB" },
+  habitsTitle:{ fontWeight:700, color:"#1565C0", marginBottom:8 },
+  habitsText:{ fontSize:13, color:"#444", margin:"4px 0" },
+  avoidCard:{ background:"#FFF3E0", borderRadius:14, padding:16, marginTop:10, border:"1px solid #FFCC80" },
+  avoidTitle:{ fontWeight:700, color:"#E65100", marginBottom:8 },
+  avoidItem:{ fontSize:13, color:"#555", margin:"4px 0" },
+  footer:{ textAlign:"center", color:"#2E7D32", fontWeight:700, fontSize:12, padding:"16px 0", letterSpacing:1 },
+  reportCard:{ background:"white", borderRadius:14, padding:16, boxShadow:"0 2px 8px rgba(0,0,0,0.06)" },
+  barRow:{ display:"flex", alignItems:"center", gap:10, marginBottom:12 },
+  barDay:{ width:36, fontSize:12, color:"#555", fontWeight:600 },
+  barTrack:{ flex:1, height:16, background:"#f0f0f0", borderRadius:8, overflow:"hidden" },
+  barFill:{ height:"100%", borderRadius:8, transition:"width 0.6s ease" },
+  barPct:{ width:36, fontSize:12, color:"#333", fontWeight:700, textAlign:"right" },
+  summaryCard:{ display:"flex", background:"white", borderRadius:14, padding:16, marginTop:12, boxShadow:"0 2px 8px rgba(0,0,0,0.06)", justifyContent:"space-around" },
+  summaryItem:{ display:"flex", flexDirection:"column", alignItems:"center", gap:4 },
+  summaryNum:{ fontSize:22, fontWeight:800, color:"#2E7D32" },
+  summaryLbl:{ fontSize:11, color:"#666", textAlign:"center" },
+  shareBtn:{ width:"100%", marginTop:14, background:"linear-gradient(135deg,#2E7D32,#66BB6A)", color:"white", border:"none", borderRadius:14, padding:"14px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 12px rgba(46,125,50,0.3)" },
+  calGrid:{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:4, background:"white", borderRadius:14, padding:12, boxShadow:"0 2px 8px rgba(0,0,0,0.06)" },
+  calHead:{ textAlign:"center", fontSize:10, fontWeight:700, color:"#2E7D32", padding:"4px 0" },
+  calCell:{ borderRadius:8, padding:4, minHeight:40, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"default" },
+  calDay:{ fontSize:12, fontWeight:600 },
+  calPct:{ fontSize:9, fontWeight:700, color:"#444" },
+  calLegend:{ display:"flex", gap:12, justifyContent:"center", marginTop:10 },
+  legendItem:{ display:"flex", alignItems:"center", gap:4, fontSize:11, color:"#555" },
+  legendDot:{ width:14, height:14, borderRadius:4 },
+  monthAvg:{ fontSize:12, color:"#2E7D32", fontWeight:600 },
+  aiFeatures:{ display:"flex", gap:8, marginBottom:14 },
+  aiFeatureBtn:{ flex:1, background:"white", border:"2px solid #E8F5E9", borderRadius:12, padding:"10px 6px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:4, fontSize:11, fontWeight:600, color:"#2E7D32", boxShadow:"0 2px 6px rgba(0,0,0,0.06)", transition:"all 0.2s" },
+  aiFIcon:{ fontSize:22 },
+  chatBox:{ background:"white", borderRadius:14, padding:12, minHeight:220, maxHeight:380, overflowY:"auto", boxShadow:"0 2px 8px rgba(0,0,0,0.06)", marginBottom:10 },
+  chatEmpty:{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:180 },
+  chatMsg:{ display:"flex", gap:8, marginBottom:10 },
+  chatUser:{ flexDirection:"row-reverse" },
+  chatIcon:{ fontSize:20, flexShrink:0 },
+  chatBubble:{ maxWidth:"78%", padding:"10px 14px", borderRadius:14, fontSize:13, lineHeight:1.5 },
+  chatBubbleUser:{ background:"#2E7D32", color:"white", borderRadius:"14px 14px 4px 14px" },
+  chatBubbleAI:{ background:"#F1F8E9", color:"#222", borderRadius:"14px 14px 14px 4px" },
+  chatInputRow:{ display:"flex", gap:8 },
+  chatInput:{ flex:1, border:"2px solid #E8F5E9", borderRadius:12, padding:"10px 14px", fontSize:14, outline:"none", background:"white" },
+  chatSend:{ background:"#2E7D32", color:"white", border:"none", borderRadius:12, padding:"10px 18px", fontSize:14, fontWeight:700, cursor:"pointer" },
+  toast:{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", background:"#2E7D32", color:"white", padding:"12px 24px", borderRadius:24, fontWeight:700, zIndex:9999, boxShadow:"0 4px 16px rgba(0,0,0,0.2)", fontSize:14 },
+};
+
+function App() {
+  const [store, setStore] = useState(loadData);
+  const [tab, setTab] = useState("today");
+  const [now, setNow] = useState(new Date());
+  const [aiMessages, setAiMessages] = useState([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
+  const [confetti, setConfetti] = useState([]);
+  const [celebTask, setCelebTask] = useState(null);
+
+  const lang = store.lang || "en";
+  const t = T[lang];
+  const tasks = TASKS_DATA[lang];
+  const todayKey = getDateKey(now);
+
+  useEffect(() => { const iv = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(iv); }, []);
+  useEffect(() => { saveData(store); }, [store]);
+
+  const todayComp = store.completions[todayKey] || {};
+  const completedCount = Object.values(todayComp).filter(Boolean).length;
+  const totalTasks = tasks.length;
+  const pct = Math.round((completedCount/totalTasks)*100);
+
+  useEffect(() => {
+    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+    const yk = getDateKey(yesterday);
+    if (store.lastDate !== todayKey) {
+      if (!store.lastDate) {
+        setStore(s=>({...s, lastDate:todayKey}));
+      } else if (store.lastDate === yk) {
+        const comp = store.completions[yk] || {};
+        const rate = Object.values(comp).filter(Boolean).length / tasks.length;
+        if (rate >= 0.7) setStore(s=>({...s, streak:(s.streak||0)+1, lastDate:todayKey}));
+        else setStore(s=>({...s, streak:0, lastDate:todayKey}));
+      } else {
+        setStore(s=>({...s, streak:0, lastDate:todayKey}));
+      }
+    }
+  }, [todayKey]);
+
+  useEffect(() => {
+    if (pct >= 70 && (store.streak||0) === 0 && store.lastDate === todayKey) {
+      const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+      const yk = getDateKey(yesterday);
+      const yComp = store.completions[yk] || {};
+      const yRate = Object.values(yComp).filter(Boolean).length / tasks.length;
+      if (yRate < 0.7) setStore(s=>({...s, streak:1}));
+    }
+  }, [completedCount]);
+
+  function toggleTask(id) {
+    const newVal = !todayComp[id];
+    setStore(s=>({...s, completions:{...s.completions,[todayKey]:{...todayComp,[id]:newVal}}, lastDate:todayKey}));
+    if (newVal) { setCelebTask(id); launchConfetti(); setTimeout(()=>setCelebTask(null),1000); }
+  }
+
+  function launchConfetti() {
+    const pieces = Array.from({length:18},(_,i)=>({ id:i, x:Math.random()*100, color:["#FFD700","#FF6B6B","#4FC3F7","#81C784","#CE93D8"][i%5], size:Math.random()*8+4, delay:Math.random()*0.5 }));
+    setConfetti(pieces); setTimeout(()=>setConfetti([]),2000);
+  }
+
+  function resetToday() { setStore(s=>({...s, completions:{...s.completions,[todayKey]:{}}})); }
+
+  function getWeekData() {
+    const result = [];
+    for (let i=6;i>=0;i--) { const d=new Date(now); d.setDate(d.getDate()-i); const key=getDateKey(d); const comp=store.completions[key]||{}; const done=Object.values(comp).filter(Boolean).length; result.push({day:t.weekdays[d.getDay()],pct:Math.round((done/totalTasks)*100),done,date:key}); }
+    return result;
+  }
+
+  function getMonthData() {
+    const daysInMonth = new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+    let totalPct=0, counted=0, result=[];
+    for (let i=1;i<=daysInMonth;i++) { const d=new Date(now.getFullYear(),now.getMonth(),i); const key=getDateKey(d); const comp=store.completions[key]||{}; const done=Object.values(comp).filter(Boolean).length; const p=Math.round((done/totalTasks)*100); if(d<=now){totalPct+=p;counted++;} result.push({day:i,pct:p,isPast:d<=now}); }
+    return {days:result, avg:counted?Math.round(totalPct/counted):0};
+  }
+
+  const hour = now.getHours();
+  const greetPart = hour<12?t.morning:hour<17?t.afternoon:hour<21?t.evening:t.night;
+  const weekData = getWeekData();
+  const monthData = getMonthData();
+
+  function getSmartReply(prompt) {
+    const p = prompt.toLowerCase();
+    const isHi = lang === "hi";
+    const streak = store.streak || 0;
+
+    // ── keyword matchers ──
+    const is = (...words) => words.some(w => p.includes(w));
+
+    // ── HERBALIFE KNOWLEDGE BASE ──
+    const HB = {
+      company:"Herbalife 1980 mein Mark Hughes ne Los Angeles mein banai. 90+ countries. NYSE: HLF. CEO: Stephan Gratziani (May 2025). #1 active nutrition brand globally (Euromonitor 2024). ~8700 employees.",
+      f1:"Formula 1 (F1): Herbalife ka flagship meal-replacement shake. Per serving with non-fat milk: ~200-220 cal, 18-24g protein, 22-28g carbs, 3-5g fiber, 21+ vitamins & minerals. Usage: 2 scoops (25g) in 250ml milk. Weight loss: 2 meals replace/day. Weight gain: meals ke SAATH lo. Versions: Standard (soy), F1 Select (gluten-free), Tri Blend Select (vegan).",
+      f2:"Formula 2 (F2): Multivitamin & mineral complex tablet. Meals ke saath lo. F1 ka companion supplement hai. Daily vitamins-minerals gap fill karta hai.",
+      f3:"Formula 3 / PPP (Personalized Protein Powder): Flavorless odorless protein powder. Per 2 scoops: ~5-6g protein, ~25 cal. Whey + soy blend. Shake ya food mein add karo bina taste change kiye.",
+      tea:"Herbal Tea Concentrate: Green + black tea blend. ~85mg caffeine/serving. Ingredients: green tea extract, orange pekoe, hibiscus, cardamom. Benefits: antioxidants, mild metabolism boost, energy. ~6-10 cal. 1 tsp in 240ml hot/cold water.",
+      aloe:"Herbal Aloe Concentrate: Aloe vera inner leaf extract. ~15-20 cal/serving. Benefits: digestive comfort, gut health, nutrient absorption, hydration. 1-3 tbsp in 240ml water. Din mein 1-3 baar meals se pehle lo.",
+      h24:"Herbalife24 Sports Line (NSF Certified for Sport): H24 Rebuild Strength (24g protein whey+casein, post-workout), H24 Prepare (pre-workout), H24 Achieve (whey protein), H24 Prolong (carb+electrolyte endurance), H24 Hydrate (electrolytes only), H24 Liftoff (effervescent energy tablet, caffeine + B-vitamins).",
+      wloss:"Classic Weight Loss Program: Formula 1 (2 meals replace/day) + Herbal Tea (1-2x/day) + Herbal Aloe (1-3x/day). Creates ~300-500 cal deficit. Expected: ~0.5-1 lb/week. Company research: ~8.5 lbs average in 12 weeks.",
+      wgain:"Weight Gain ke liye: F1 meals ke SAATH lo (replace nahi). Formula 3 PPP extra protein ke liye. Calorie surplus: 4 roti+dal+sabzi+curd, bananas, dry fruits, sprouts. 10 glasses paani. 7-8 ghante neend (Growth Hormone release hota hai neend mein).",
+      business:"Herbalife MLM Business: Levels: Member (25%) > Senior Consultant (35%, 500VP) > Qualified Producer (42%, 2500VP) > Supervisor (50%, 4000VP) > World Team > GET Team > Millionaire Team > President's Team. Income: retail profit 25-50%, wholesale commissions, royalty overrides up to 5%. Reality: most distributors earn minimal income.",
+      safety:"Safety: Healthy adults ke liye generally safe. Doctor se consult karo agar: kidney/liver disease, pregnant/breastfeeding, medications, diabetes, under 18, soy/milk allergy. Rare liver stress case reports. FDA DSHEA 1994 ke under regulated. Herbalife24 NSF Certified for Sport hai.",
+      faq:"FAQs: F1 FDA-approved nahi (dietary supplements ko pre-approval nahi chahiye). Standard F1 vegetarian (vegan nahi) — Select versions vegan hain. F1 Select gluten-free hai. 750g canister = ~30 servings. Men bhi use kar sakte hain. Exercise ke saath better results. Diabetics pehle doctor se milein.",
+      products:"Full Products: Weight: F1,F2,F3/PPP,Herbal Tea,Herbal Aloe,Cell-U-Loss,Total Control,Active Fiber Complex. Supplements: Omega-3 (Herbalifeline Max), Joint Support Advanced, Niteworks (L-arginine), Simply Probiotic, Beta Heart, Collagen Booster, Immune Booster. Sports: Full H24 line. Skin/Hair: Herbalife SKIN line. Kids: DinoshakeKids.",
+      science:"Nutrition Science: Meal replacements work via caloric control (200 cal vs 500-800 normal meals), protein satiety (ghrelin hunger hormone reduce hota hai), 21+ vitamins se cravings prevent hoti hain. Protein: 0.8g/kg sedentary, 1.2-1.6g/kg active, 1.6-2.2g/kg athletes. Green tea EGCG: 3-4% metabolic boost. Aloe acemannan: gut lining soothe karta hai.",
+      compare:"vs Competitors: USANA (MLM, high price), Isagenix (MLM, cleanse-based), Amway/Nutrilite (biggest direct-selling), Medifast/Optavia (non-MLM, doctor-backed), SlimFast (retail, cheap, no coaching), Myprotein (online, sports only). Herbalife advantage: community coaching model, 45-year brand, NSF certified, 90+ countries.",
+      controversy:"Controversies: 2012-2016 Bill Ackman $1B short bet + pyramid scheme accusation. Carl Icahn opposing position. 2016 FTC settlement: $200M paid + compensation plan restructured. FTC ne pyramid scheme label NAHI kiya. Rare liver damage reports. Disclosure required: most distributors earn little/no income."
+    };
+    function hbReply(answer) {
+      const pre = isHi ? "🌿 Herbalife जानकारी:\n\n" : "🌿 Herbalife Info:\n\n";
+      const suf = isHi ? "\n\n💡 और जानना हो? कोई भी product या topic पूछें!" : "\n\n💡 Want to know more? Ask about any product or topic!";
+      return pre + answer + suf;
+    }
+
+    if (is("formula 1","formula1","फॉर्मूला 1","फॉर्मूला1")) return hbReply(HB.f1);
+    if (is("formula 2","formula2","f2","multivitamin","मल्टीविटामिन")) return hbReply(HB.f2);
+    if (is("formula 3","formula3","f3","ppp","personalized protein")) return hbReply(HB.f3);
+    if (is("herbal tea","tea concentrate","हर्बल टी")) return hbReply(HB.tea);
+    if (is("aloe","एलोवेरा","digestive","पाचन")) return hbReply(HB.aloe);
+    if (is("h24","herbalife24","rebuild","liftoff","prolong","एच24")) return hbReply(HB.h24);
+    if (is("weight loss","lose weight","fat loss","वजन घटाना","वजन कम","slim")) return hbReply(HB.wloss);
+    if (is("weight gain","वजन बढ़ाना","gain weight","bulking")) return hbReply(HB.wgain);
+    if (is("business","mlm","distributor","supervisor","income","डिस्ट्रीब्यूटर","बिजनेस","कमाई")) return hbReply(HB.business);
+    if (is("safe","safety","side effect","liver","kidney","pregnant","सुरक्षित","साइड इफेक्ट","नुकसान")) return hbReply(HB.safety);
+    if (is("fda","gluten","vegan","vegetarian","diabetic","allergy","ग्लूटेन","वेगन","शाकाहारी")) return hbReply(HB.faq);
+    if (is("science","calorie","soy","whey","casein","कैलोरी","साइंस")) return hbReply(HB.science);
+    if (is("product","catalog","range","omega","probiotic","niteworks","collagen","cell activator","प्रोडक्ट","रेंज")) return hbReply(HB.products);
+    if (is("competitor","compare","shaklee","usana","isagenix","slimfast","myprotein","तुलना")) return hbReply(HB.compare);
+    if (is("pyramid","ftc","ackman","controversy","lawsuit","पिरामिड","विवाद")) return hbReply(HB.controversy);
+    if (is("company","history","founder","mark hughes","herbalife kya","कंपनी","इतिहास","फाउंडर")) return hbReply(HB.company);
+
+    // MEAL feature
+    if (is("meal","breakfast","lunch","dinner","snack","recipe","खाना","नाश्ता","खाने","भोजन","मील","रेसिपी")) {
+      const meals = isHi ? [
+        "🥗 कल के लिए मील सुझाव:\n\n🌅 नाश्ता: Formula-1 (3 स्कूप) + दूध + 2 केले का शेक\n🍱 दोपहर: 4 रोटी + दाल + पनीर सब्जी + दही\n🌿 शाम: मूंग-चना स्प्राउट्स + मुट्ठी भर बादाम\n🌙 रात: 3 रोटी + सोया चंक्स सब्जी\n\n💡 टिप: हर मील के साथ 1-2 गिलास पानी पिएं। वजन बढ़ाने के लिए कैलोरी सरप्लस जरूरी है!",
+        "🍽️ वजन बढ़ाने के लिए कल का प्लान:\n\n☀️ सुबह: अंडे (3) + 2 ब्राउन रोटी + 1 केला\n🕛 दोपहर: राजमा-चावल (भरपूर) + सलाद + लस्सी\n🌿 शाम: ShakeMate शेक + 5-6 अखरोट\n🌙 रात: 3 रोटी + पनीर भुर्जी\n\n💪 याद रहे: प्रोटीन + कार्ब्स + हेल्दी फैट — तीनों जरूरी हैं!",
+        "🥤 हेल्दी वेट गेन मील आइडियाज:\n\n🌅 सुबह: ओट्स + दूध + शहद + बादाम\n🍱 दोपहर: 4 रोटी + छोले + दही + सलाद\n☕ शाम: मूंगफली बटर टोस्ट + दूध\n🌙 रात: 3 रोटी + दाल मखनी\n\n✅ Afresh सुबह-दोपहर लेना न भूलें — metabolism बूस्ट होगी!"
+      ] : [
+        "🥗 Meal Plan for Tomorrow:\n\n🌅 Breakfast: Formula-1 (3 scoops) + milk + 2 banana shake\n🍱 Lunch: 4 Roti + Dal + Paneer sabzi + Curd\n🌿 Evening: Sprouts + handful of almonds\n🌙 Dinner: 3 Roti + Soya chunks sabzi\n\n💡 Tip: Drink 1-2 glasses of water with every meal. Calorie surplus is key for weight gain!",
+        "🍽️ Weight Gain Meal Ideas:\n\n☀️ Morning: 3 Eggs + 2 brown rotis + 1 banana\n🕛 Lunch: Rajma-rice (generous) + salad + lassi\n🌿 Evening: ShakeMate shake + 5-6 walnuts\n🌙 Dinner: 3 Roti + Paneer bhurji\n\n💪 Remember: Protein + Carbs + Healthy fats — all three are essential!",
+        "🥤 Healthy Calorie-Dense Options:\n\n🌅 Breakfast: Oats + milk + honey + almonds\n🍱 Lunch: 4 Roti + Chole + Curd + Salad\n☕ Evening: Peanut butter toast + milk\n🌙 Dinner: 3 Roti + Dal makhani\n\n✅ Don't skip Afresh morning & afternoon — it boosts your metabolism!"
+      ];
+      return meals[Math.floor(Math.random()*meals.length)];
+    }
+
+    // ANALYZE / PROGRESS feature
+    if (is("progress","analyze","analysis","report","week","streak","प्रगति","विश्लेषण","रिपोर्ट","सप्ताह","स्ट्रीक")) {
+      const avgPct = weekData.length ? Math.round(weekData.reduce((a,d)=>a+d.pct,0)/weekData.length) : 0;
+      const bestDay = weekData.reduce((best,d)=>d.pct>best.pct?d:best, weekData[0]||{pct:0});
+      const weakDays = weekData.filter(d=>d.pct<50);
+      if (isHi) {
+        let msg = `📊 आपकी साप्ताहिक प्रगति रिपोर्ट:\n\n✅ आज पूर्ण: ${pct}% (${completedCount}/${totalTasks} कार्य)\n📈 साप्ताहिक औसत: ${avgPct}%\n🔥 स्ट्रीक: ${streak} दिन\n🏆 सबसे अच्छा दिन: ${bestDay.day||"-"} (${bestDay.pct||0}%)\n\n`;
+        if (avgPct >= 80) msg += "🌟 शानदार! आप बहुत अच्छा कर रहे हैं। ऐसे ही जारी रखें!";
+        else if (avgPct >= 50) msg += `💡 अच्छी शुरुआत! ${weakDays.length?weakDays.map(d=>d.day).join(", ")+" पर ध्यान दें।":""} रोज़ 70%+ का लक्ष्य रखें।`;
+        else msg += "💪 अभी शुरुआत है! छोटे-छोटे कदम लें — पहले 5 tasks रोज़ पूरे करें। Consistency ही सबसे बड़ी ताकत है!";
+        return msg;
+      } else {
+        let msg = `📊 Your Weekly Progress Report:\n\n✅ Today: ${pct}% (${completedCount}/${totalTasks} tasks)\n📈 Weekly avg: ${avgPct}%\n🔥 Streak: ${streak} days\n🏆 Best day: ${bestDay.day||"-"} (${bestDay.pct||0}%)\n\n`;
+        if (avgPct >= 80) msg += "🌟 Outstanding! You're doing amazing. Keep this momentum going!";
+        else if (avgPct >= 50) msg += `💡 Good progress! ${weakDays.length?"Focus more on: "+weakDays.map(d=>d.day).join(", ")+".":""} Aim for 70%+ daily.`;
+        else msg += "💪 Every journey starts somewhere! Begin with completing just 5 tasks daily. Consistency beats perfection every time!";
+        return msg;
+      }
+    }
+
+    // MOTIVATION feature
+    if (is("motivat","inspire","boost","energy","tired","give up","प्रेरण","थक","हार","ऊर्जा","हिम्मत","मोटिवेट")) {
+      const quotes = isHi ? [
+        `🔥 ${streak} दिन की स्ट्रीक — यही आपकी ताकत है!\n\n"वजन बढ़ाना एक यात्रा है, मंजिल नहीं। हर दिन का एक-एक कार्य पूरा करना ही असली जीत है।"\n\n💪 आज ${pct}% पूरा किया — कल ${pct<100?pct+10:100}% का लक्ष्य रखें!\n\n🌱 याद रखें: पेड़ एक दिन में नहीं उगता, लेकिन हर दिन पानी देने से जरूर उगता है।`,
+        `🌟 आप amazing हैं!\n\nआज ${completedCount} काम पूरे किए — यही consistency एक दिन बड़ा बदलाव लाएगी।\n\n💡 3 चीज़ें जो आपको आगे बढ़ाएंगी:\n1. हर सुबह Formula-1 शेक जरूर लें\n2. रात को 7-8 घंटे सोएं\n3. खुद पर भरोसा रखें!\n\n🏆 ${streak} दिन की streak तोड़ना मत!`,
+        `💪 मेहनत कभी बेकार नहीं जाती!\n\nआपका शरीर अंदर से बदल रहा है — बस दिखने में थोड़ा वक्त लगता है।\n\nआज का काम: अभी जो task बची है, उसे 10 मिनट में पूरा करें। बस एक कदम!\n\n🔥 Streak: ${streak} दिन — यह आपकी dedication का सबूत है!`
+      ] : [
+        `🔥 ${streak}-day streak — that's YOUR power!\n\n"Weight gain is a journey, not a destination. Completing each task daily IS the victory."\n\n💪 You've done ${pct}% today — push for ${Math.min(pct+15,100)}% tomorrow!\n\n🌱 Remember: Trees don't grow overnight, but consistent watering makes them grow for sure.`,
+        `🌟 You're doing amazing!\n\nYou completed ${completedCount} tasks today — this consistency WILL create massive change.\n\n💡 3 things that will accelerate your progress:\n1. Never skip your Formula-1 shake\n2. Sleep 7-8 hours every night\n3. Trust the process!\n\n🏆 Don't break your ${streak}-day streak!`,
+        `💪 Hard work is never wasted!\n\nYour body is changing from the inside — it just takes time to show.\n\nYour mission right now: Complete ONE pending task in the next 10 minutes. Just one step!\n\n🔥 ${streak} days of streak — this is proof of your dedication!`
+      ];
+      return quotes[Math.floor(Math.random()*quotes.length)];
+    }
+
+    // SUPPLEMENT questions
+    if (is("formula","shakemate","afresh","supplement","scoop","protein","सप्लीमेंट","स्कूप","प्रोटीन")) {
+      return isHi
+        ? "💊 सप्लीमेंट गाइड:\n\n🥤 Formula-1: 3 स्कूप सुबह 8 बजे — मुख्य न्यूट्रिशन शेक\n💪 ShakeMate: Formula-1 के साथ 2 स्कूप — प्रोटीन बूस्ट\n🌿 Afresh: सुबह 7 बजे + दोपहर 1 बजे — 1-1 स्कूप — metabolism बूस्टर\n\n✅ इन्हें ठंडे दूध या पानी में मिलाएं\n⚠️ इन्हें skip न करें — ये आपके plan का core हैं!"
+        : "💊 Supplement Guide:\n\n🥤 Formula-1: 3 scoops at 8 AM — main nutrition shake\n💪 ShakeMate: 2 scoops with Formula-1 — protein boost\n🌿 Afresh: 7 AM + 1 PM — 1 scoop each — metabolism booster\n\n✅ Mix with cold milk or water\n⚠️ Never skip these — they are the core of your plan!";
+    }
+
+    // WATER / HYDRATION
+    if (is("water","hydrat","पानी","हाइड्रेशन")) {
+      return isHi
+        ? "💧 हाइड्रेशन टिप्स:\n\n✅ रोज़ 10 गिलास पानी पिएं\n🕕 सुबह उठते ही 1 गिलास — metabolism शुरू होती है\n🍽️ खाने से 30 मिनट पहले पानी पिएं, बीच में नहीं\n🌙 रात को सोने से पहले 1 गिलास गुनगुना पानी\n\n💡 पानी पीने से nutrients absorb होते हैं और वजन बढ़ाने में मदद मिलती है!"
+        : "💧 Hydration Tips:\n\n✅ Drink 10 glasses of water daily\n🕕 1 glass right after waking up — kickstarts metabolism\n🍽️ Drink water 30 min before meals, not during\n🌙 1 glass of warm water before sleeping\n\n💡 Proper hydration helps absorb nutrients and supports healthy weight gain!";
+    }
+
+    // SLEEP / REST
+    if (is("sleep","rest","sona","नींद","आराम","सोना")) {
+      return isHi
+        ? "🌙 नींद और वजन बढ़ाना:\n\n✅ रोज़ 7-8 घंटे की नींद लें\n💪 नींद में Growth Hormone release होता है — यही असली muscle building होती है!\n📵 रात 10 बजे के बाद screen time कम करें\n🌡️ ठंडे कमरे में सोएं — बेहतर नींद आती है\n\n⚠️ नींद कम = वजन कम बढ़ेगा। Sleep is NOT optional!"
+        : "🌙 Sleep & Weight Gain:\n\n✅ Get 7-8 hours of sleep daily\n💪 Growth Hormone is released during sleep — that's real muscle building!\n📵 Reduce screen time after 10 PM\n🌡️ Sleep in a cool room — better quality sleep\n\n⚠️ Less sleep = slower weight gain. Sleep is NOT optional!";
+    }
+
+    // EXERCISE / WORKOUT
+    if (is("exercise","workout","gym","walk","yoga","व्यायाम","कसरत","जिम","योग")) {
+      return isHi
+        ? "🏋️ वजन बढ़ाने के लिए एक्सरसाइज:\n\n✅ हल्की strength training करें — squats, push-ups, pull-ups\n🚶 रोज़ 20-30 मिनट walk करें\n⚠️ बहुत ज़्यादा cardio avoid करें — calories burn होती हैं\n💪 हफ्ते में 3-4 दिन workout करें\n\n🎯 Goal: Muscle gain, न सिर्फ fat gain। Protein intake बढ़ाएं साथ में!"
+        : "🏋️ Exercise for Weight Gain:\n\n✅ Light strength training — squats, push-ups, pull-ups\n🚶 20-30 min walk daily\n⚠️ Avoid excessive cardio — it burns too many calories\n💪 Workout 3-4 days per week\n\n🎯 Goal: Muscle gain, not just fat gain. Increase protein intake alongside!";
+    }
+
+    // DEFAULT / unknown question
+    const defaults = isHi ? [
+      `🤖 मैं आपका Diet Coach हूं!\n\nमैं इन topics पर मदद कर सकता हूं:\n🥗 मील प्लान सुझाव\n📊 प्रगति विश्लेषण\n💪 मोटिवेशन\n💊 सप्लीमेंट गाइड\n💧 हाइड्रेशन\n🌙 नींद\n🏋️ एक्सरसाइज\n\nआज आपने ${pct}% tasks पूरे किए — बढ़िया है! कोई specific सवाल पूछें।`,
+      `🌿 नमस्ते! मैं केवल वजन बढ़ाने और आपके Diet Plan से जुड़े सवालों का जवाब दे सकता हूं।\n\nआज का status: ${completedCount}/${totalTasks} tasks ✅\n\nऊपर दिए buttons दबाएं या पूछें:\n- "कल का meal plan क्या हो?"\n- "मेरी progress कैसी है?"\n- "मुझे motivate करो"`
+    ] : [
+      `🤖 I'm your Diet Coach!\n\nI can help with:\n🥗 Meal plan suggestions\n📊 Progress analysis\n💪 Motivation\n💊 Supplement guide\n💧 Hydration tips\n🌙 Sleep advice\n🏋️ Exercise guidance\n\nYou've completed ${pct}% today — great work! Ask me anything specific.`,
+      `🌿 I can only answer questions about weight gain and your Diet Plan.\n\nToday's status: ${completedCount}/${totalTasks} tasks ✅\n\nTry asking:\n- "What should I eat tomorrow?"\n- "How is my progress?"\n- "Motivate me!"`
+    ];
+    return defaults[Math.floor(Math.random()*defaults.length)];
+  }
+
+  function sendAI(customPrompt) {
+    const prompt = customPrompt || aiInput.trim();
+    if (!prompt) return;
+    const userMsg = {role:"user", content:prompt};
+    const newMsgs = [...aiMessages, userMsg];
+    setAiMessages(newMsgs); setAiInput(""); setAiLoading(true);
+    setTimeout(() => {
+      const reply = getSmartReply(prompt);
+      setAiMessages([...newMsgs, {role:"assistant", content:reply}]);
+      setAiLoading(false);
+    }, 800);
+  }
+
+  function triggerAIFeature(mode) {
+    setTab("ai");
+    if (mode==="meal") sendAI(lang==="hi"?"मुझे कल का मील प्लान सुझाएं":"Suggest a meal plan for tomorrow");
+    else if (mode==="analyze") sendAI(lang==="hi"?"मेरी प्रगति का विश्लेषण करें":"Analyze my progress");
+    else if (mode==="motivate") sendAI(lang==="hi"?"मुझे प्रेरित करें":"Motivate me");
+  }
+
+  function shareProgress() {
+    const text = lang==="hi"
+      ?`🏋️ मेरी वजन बढ़ाने की प्रगति\n\nआज: ${pct}% (${completedCount}/${totalTasks} कार्य)\n🔥 स्ट्रीक: ${store.streak||0} दिन\n\nसाप्ताहिक रिपोर्ट:\n${weekData.map(d=>d.day+": "+d.pct+"%").join("\n")}\n\n#वजनबढ़ाओ #हेल्दीलाइफ`
+      :`🏋️ My Weight Gain Progress\n\nToday: ${pct}% (${completedCount}/${totalTasks} tasks)\n🔥 Streak: ${store.streak||0} days\n\nWeekly Report:\n${weekData.map(d=>d.day+": "+d.pct+"%").join("\n")}\n\n#WeightGain #HealthyLife`;
+    if (navigator.share) navigator.share({title:t.shareTitle,text});
+    else navigator.clipboard.writeText(text).then(()=>{ setShareToast(true); setTimeout(()=>setShareToast(false),2500); });
+  }
+
+  // ── RENDER HELPERS ──
+  function renderConfetti() {
+    return confetti.map(c => h("div",{key:c.id,style:{position:"fixed",top:"-10px",left:`${c.x}%`,width:c.size,height:c.size,borderRadius:"50%",background:c.color,zIndex:9999,animation:"confettiFall 1.8s ease-in forwards",animationDelay:`${c.delay}s`,pointerEvents:"none"}}));
+  }
+
+  function renderHeader() {
+    return h("div",{style:S.header},
+      h("div",{style:S.headerBg}),
+      h("div",{style:S.headerContent},
+        h("div",{style:S.headerTop},
+          h("div",null,
+            h("div",{style:S.greeting},t.greeting+" "+greetPart+"! 🌟"),
+            h("div",{style:S.appTitle},t.appTitle)
+          ),
+          h("button",{style:S.langBtn,onClick:()=>setStore(s=>({...s,lang:lang==="en"?"hi":"en"}))},t.switchLang)
+        ),
+        h("div",{style:S.progressRow},
+          h("div",null,
+            h("svg",{width:88,height:88,viewBox:"0 0 88 88"},
+              h("circle",{cx:44,cy:44,r:36,fill:"none",stroke:"rgba(255,255,255,0.2)",strokeWidth:8}),
+              h("circle",{cx:44,cy:44,r:36,fill:"none",stroke:"#FFD700",strokeWidth:8,strokeDasharray:`${(pct/100)*226.2} 226.2`,strokeLinecap:"round",transform:"rotate(-90 44 44)",style:{transition:"stroke-dasharray 0.6s ease"}}),
+              h("text",{x:44,y:49,textAnchor:"middle",fill:"white",fontSize:18,fontWeight:"bold"},pct+"%")
+            )
+          ),
+          h("div",{style:S.statsCol},
+            h("div",{style:S.statItem},h("span",{style:S.statNum},completedCount+"/"+totalTasks),h("span",{style:S.statLbl},t.completedTasks)),
+            h("div",{style:S.statItem},h("span",{style:S.statNum},"🔥 "+(store.streak||0)),h("span",{style:S.statLbl},t.streakDays)),
+            h("div",{style:S.statItem},h("span",{style:S.statNum},(weekData.length?Math.round(weekData.reduce((a,d)=>a+d.pct,0)/weekData.length):0)+"%"),h("span",{style:S.statLbl},t.avgCompletion))
+          )
+        ),
+        h("div",{style:S.timeDisplay},now.toLocaleTimeString(lang==="hi"?"hi-IN":"en-US",{hour:"2-digit",minute:"2-digit"})+" · "+now.toLocaleDateString(lang==="hi"?"hi-IN":"en-US",{weekday:"long",month:"short",day:"numeric"}))
+      )
+    );
+  }
+
+  function renderTabs() {
+    return h("div",{style:S.tabBar},
+      [["today","📋",t.today],["weekly","📊",t.weekly],["monthly","📅",t.monthly],["ai","🤖",t.aiCoach]].map(([key,icon,label])=>
+        h("button",{key,style:{...S.tabBtn,...(tab===key?S.tabActive:{})},onClick:()=>setTab(key)},
+          h("span",{style:{fontSize:16}},icon),
+          h("span",{style:S.tabLabel},label)
+        )
+      )
+    );
+  }
+
+  function renderToday() {
+    return h("div",null,
+      h("div",{style:S.sectionHeader},
+        h("span",null,t.todayProgress),
+        h("button",{style:S.resetBtn,onClick:resetToday},t.resetDay)
+      ),
+      ...tasks.map(task=>{
+        const done=!!todayComp[task.id], isCurrent=celebTask===task.id;
+        return h("div",{key:task.id,style:{...S.taskCard,...(done?S.taskDone:{}),...(isCurrent?S.taskCelebrate:{})},onClick:()=>toggleTask(task.id)},
+          h("div",{style:{...S.taskAccent,background:task.color}}),
+          h("div",{style:S.taskTime},task.time),
+          h("div",{style:S.taskEmoji},task.emoji),
+          h("div",{style:S.taskInfo},
+            h("div",{style:S.taskTitle},task.title),
+            h("div",{style:S.taskDesc},task.desc),
+            h("div",{style:{...S.taskTag,background:task.color+"33",color:task.color}},task.tag)
+          ),
+          h("div",{style:{...S.taskCheck,...(done?S.taskCheckDone:{})}},done?"✓":"")
+        );
+      }),
+      h("div",{style:S.habitsCard},
+        h("div",{style:S.habitsTitle},"💧 "+t.dailyHabits),
+        h("p",{style:S.habitsText},t.hydration),
+        h("p",{style:S.habitsText},t.consistency)
+      ),
+      h("div",{style:S.avoidCard},
+        h("div",{style:S.avoidTitle},"🚫 "+t.foodsToAvoid),
+        ...[t.avoid1,t.avoid2,t.avoid3,t.avoid4].map((a,i)=>h("div",{key:i,style:S.avoidItem},"⊗ "+a))
+      ),
+      h("div",{style:S.footer},t.rightNutrition+" • "+t.consistency2+" • "+t.betterResults)
+    );
+  }
+
+  function renderWeekly() {
+    return h("div",null,
+      h("div",{style:S.sectionHeader},h("span",null,t.weeklyReport)),
+      h("div",{style:S.reportCard},
+        ...weekData.map((d,i)=>h("div",{key:i,style:S.barRow},
+          h("div",{style:S.barDay},d.day),
+          h("div",{style:S.barTrack},h("div",{style:{...S.barFill,width:`${d.pct}%`,background:d.pct>=80?"#81C784":d.pct>=50?"#FFD700":"#EF9A9A"}})),
+          h("div",{style:S.barPct},d.pct+"%")
+        ))
+      ),
+      h("div",{style:S.summaryCard},
+        h("div",{style:S.summaryItem},h("span",{style:S.summaryNum},weekData.filter(d=>d.pct>=80).length),h("span",{style:S.summaryLbl},"🟢 "+(lang==="hi"?"अच्छे दिन":"Great Days"))),
+        h("div",{style:S.summaryItem},h("span",{style:S.summaryNum},Math.round(weekData.reduce((a,d)=>a+d.pct,0)/7)+"%"),h("span",{style:S.summaryLbl},"📊 "+(lang==="hi"?"औसत":"Average"))),
+        h("div",{style:S.summaryItem},h("span",{style:S.summaryNum},Math.max(...weekData.map(d=>d.pct))+"%"),h("span",{style:S.summaryLbl},"🏆 "+(lang==="hi"?"सर्वश्रेष्ठ":"Best Day")))
+      ),
+      h("button",{style:S.shareBtn,onClick:shareProgress},"📤 "+t.shareProgress)
+    );
+  }
+
+  function renderMonthly() {
+    const firstDay = new Date(now.getFullYear(),now.getMonth(),1).getDay();
+    return h("div",null,
+      h("div",{style:S.sectionHeader},
+        h("span",null,t.monthlyReport),
+        h("span",{style:S.monthAvg},t.months[now.getMonth()]+" · "+monthData.avg+"% "+(lang==="hi"?"औसत":"avg"))
+      ),
+      h("div",{style:S.calGrid},
+        ...t.weekdays.map(d=>h("div",{key:d,style:S.calHead},d)),
+        ...Array.from({length:firstDay},(_,i)=>h("div",{key:"e"+i})),
+        ...monthData.days.map(d=>h("div",{key:d.day,style:{...S.calCell,background:!d.isPast?"#f5f5f5":d.pct>=80?"#C8E6C9":d.pct>=50?"#FFF9C4":d.pct>0?"#FFCDD2":"#EEEEEE",border:d.day===now.getDate()?"2px solid #2E7D32":"1px solid #eee",color:d.isPast?"#333":"#bbb"}},
+          h("div",{style:S.calDay},d.day),
+          d.isPast&&d.pct>0?h("div",{style:S.calPct},d.pct+"%"):null
+        ))
+      ),
+      h("div",{style:S.calLegend},
+        ...[["#C8E6C9","≥80%"],["#FFF9C4","50–79%"],["#FFCDD2","<50%"]].map(([c,l])=>
+          h("div",{key:l,style:S.legendItem},h("div",{style:{...S.legendDot,background:c}}),l)
+        )
+      ),
+      h("button",{style:S.shareBtn,onClick:shareProgress},"📤 "+t.shareProgress)
+    );
+  }
+
+  function renderAI() {
+    return h("div",null,
+      h("div",{style:S.sectionHeader},h("span",null,"🤖 "+t.aiCoach)),
+      h("div",{style:S.aiFeatures},
+        h("button",{style:S.aiFeatureBtn,onClick:()=>triggerAIFeature("meal")},h("span",{style:S.aiFIcon},"🥗"),h("span",null,t.aiFeature1)),
+        h("button",{style:S.aiFeatureBtn,onClick:()=>triggerAIFeature("analyze")},h("span",{style:S.aiFIcon},"📊"),h("span",null,t.aiFeature2)),
+        h("button",{style:S.aiFeatureBtn,onClick:()=>triggerAIFeature("motivate")},h("span",{style:S.aiFIcon},"💪"),h("span",null,t.aiFeature3))
+      ),
+      h("div",{style:S.chatBox},
+        aiMessages.length===0
+          ? h("div",{style:S.chatEmpty},h("div",{style:{fontSize:40}},"🤖"),h("div",{style:{color:"#666",marginTop:8,fontSize:14,textAlign:"center"}},lang==="hi"?"नमस्ते! मैं आपका AI हेल्थ कोच हूं। ऊपर दिए बटन दबाएं या सीधे सवाल पूछें।":"Hi! I'm your AI health coach. Tap a feature above or ask me anything!"))
+          : h("div",null,
+              ...aiMessages.map((m,i)=>h("div",{key:i,style:{...S.chatMsg,...(m.role==="user"?S.chatUser:{})}},
+                m.role==="assistant"?h("div",{style:S.chatIcon},"🤖"):null,
+                h("div",{style:{...S.chatBubble,...(m.role==="user"?S.chatBubbleUser:S.chatBubbleAI)}},m.content)
+              )),
+              aiLoading?h("div",{style:S.chatMsg},h("div",{style:S.chatIcon},"🤖"),h("div",{style:S.chatBubbleAI},h("span",{className:"dots"},"●●●"))):null
+            )
+      ),
+      h("div",{style:S.chatInputRow},
+        h("input",{value:aiInput,onChange:e=>setAiInput(e.target.value),onKeyDown:e=>e.key==="Enter"&&sendAI(),placeholder:t.askAI,style:S.chatInput}),
+        h("button",{style:S.chatSend,onClick:()=>sendAI(),disabled:aiLoading},t.aiSend)
+      )
+    );
+  }
+
+  return h("div",{style:S.root},
+    ...renderConfetti(),
+    renderHeader(),
+    renderTabs(),
+    h("div",{style:S.content},
+      tab==="today"?renderToday():null,
+      tab==="weekly"?renderWeekly():null,
+      tab==="monthly"?renderMonthly():null,
+      tab==="ai"?renderAI():null
+    ),
+    shareToast?h("div",{style:S.toast},"✅ "+t.copied):null
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App,null));
+  </script>
+</body>
+</html>
